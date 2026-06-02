@@ -1,0 +1,182 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum Role {
+  MEMBER
+  MENTOR
+  TM
+  ADMIN
+}
+
+enum ImprovementStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+}
+
+enum PlanStatus {
+  ACTIVE
+  COMPLETED
+}
+
+enum PlanItemStatus {
+  PENDING
+  IN_PROGRESS
+  DONE
+}
+
+model Team {
+  id      Int    @id @default(autoincrement())
+  name    String
+  members User[]
+}
+
+model User {
+  id           Int    @id @default(autoincrement())
+  name         String
+  email        String @unique
+  passwordHash String
+  role         Role   @default(MEMBER)
+
+  teamId   Int?
+  team     Team? @relation(fields: [teamId], references: [id])
+  mentorId Int?
+  mentor   User? @relation("MentorMembers", fields: [mentorId], references: [id])
+
+  mentees          User[]            @relation("MentorMembers")
+  assessments      AssessmentResult[]
+  studyLogs        StudyLog[]
+  learningPlans    LearningPlan[]    @relation("PlanOwner")
+  createdPlans     LearningPlan[]    @relation("PlanCreator")
+  feedbackReceived Feedback[]        @relation("FeedbackMember")
+  feedbackGiven    Feedback[]        @relation("FeedbackMentor")
+  improvementsAsMember ImprovementCycle[] @relation("ImprovementMember")
+  improvementsAsMentor ImprovementCycle[] @relation("ImprovementMentor")
+
+  createdAt DateTime @default(now())
+}
+
+model SkillCategory {
+  id          Int    @id @default(autoincrement())
+  name        String
+  description String @default("")
+  icon        String @default("📚")
+
+  grades           SkillGrade[]
+  assessments      AssessmentResult[]
+  trainingContents TrainingContent[]
+  feedback         Feedback[]
+}
+
+model SkillGrade {
+  id          Int    @id @default(autoincrement())
+  grade       Int
+  description String
+  criteria    String @default("")
+
+  categoryId Int
+  category   SkillCategory @relation(fields: [categoryId], references: [id])
+}
+
+model AssessmentResult {
+  id    Int @id @default(autoincrement())
+  score Int
+  grade Int
+
+  userId     Int
+  user       User          @relation(fields: [userId], references: [id])
+  categoryId Int
+  category   SkillCategory @relation(fields: [categoryId], references: [id])
+
+  createdAt DateTime @default(now())
+}
+
+model TrainingContent {
+  id               Int    @id @default(autoincrement())
+  title            String
+  description      String @default("")
+  minGrade         Int    @default(1)
+  contentUrl       String @default("")
+  durationMinutes  Int    @default(60)
+  tags             String @default("")
+
+  categoryId Int
+  category   SkillCategory @relation(fields: [categoryId], references: [id])
+
+  studyLogs        StudyLog[]
+  learningPlanItems LearningPlanItem[]
+}
+
+model LearningPlan {
+  id             Int        @id @default(autoincrement())
+  shortTermGoal  String     @default("")
+  midTermGoal    String     @default("")
+  status         PlanStatus @default(ACTIVE)
+
+  userId      Int
+  user        User @relation("PlanOwner", fields: [userId], references: [id])
+  createdById Int
+  createdBy   User @relation("PlanCreator", fields: [createdById], references: [id])
+
+  items     LearningPlanItem[]
+  createdAt DateTime           @default(now())
+}
+
+model LearningPlanItem {
+  id     Int            @id @default(autoincrement())
+  order  Int            @default(0)
+  status PlanItemStatus @default(PENDING)
+
+  planId            Int
+  plan              LearningPlan    @relation(fields: [planId], references: [id])
+  trainingContentId Int
+  trainingContent   TrainingContent @relation(fields: [trainingContentId], references: [id])
+}
+
+model StudyLog {
+  id              Int      @id @default(autoincrement())
+  durationMinutes Int      @default(0)
+  memo            String   @default("")
+  loggedAt        DateTime @default(now())
+
+  userId            Int
+  user              User             @relation(fields: [userId], references: [id])
+  trainingContentId Int?
+  trainingContent   TrainingContent? @relation(fields: [trainingContentId], references: [id])
+}
+
+model Feedback {
+  id      Int    @id @default(autoincrement())
+  content String
+
+  mentorId   Int
+  mentor     User          @relation("FeedbackMentor", fields: [mentorId], references: [id])
+  memberId   Int
+  member     User          @relation("FeedbackMember", fields: [memberId], references: [id])
+  categoryId Int?
+  category   SkillCategory? @relation(fields: [categoryId], references: [id])
+
+  createdAt DateTime @default(now())
+}
+
+model ImprovementCycle {
+  id     Int                @id @default(autoincrement())
+  issue  String
+  action String             @default("")
+  result String             @default("")
+  status ImprovementStatus  @default(OPEN)
+
+  mentorId Int
+  mentor   User @relation("ImprovementMentor", fields: [mentorId], references: [id])
+  memberId Int
+  member   User @relation("ImprovementMember", fields: [memberId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
