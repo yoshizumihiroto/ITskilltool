@@ -23,6 +23,7 @@ const mentorNav = [
 
 const tmNav = [
   { href: '/tm', label: 'チームダッシュボード', icon: '📈' },
+  { href: '/tm/training', label: 'コンテンツ管理 (AI)', icon: '🤖' },
 ]
 
 export default function Sidebar({ role, userName }: SidebarProps) {

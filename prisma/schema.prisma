@@ -58,6 +58,7 @@ model User {
   feedbackGiven    Feedback[]        @relation("FeedbackMentor")
   improvementsAsMember ImprovementCycle[] @relation("ImprovementMember")
   improvementsAsMentor ImprovementCycle[] @relation("ImprovementMentor")
+  quizResults      QuizResult[]
 
   createdAt DateTime @default(now())
 }
@@ -105,12 +106,32 @@ model TrainingContent {
   contentUrl       String @default("")
   durationMinutes  Int    @default(60)
   tags             String @default("")
+  learningText     String @default("")
+  quizJson         String @default("[]")
+  isAiGenerated    Boolean @default(false)
 
   categoryId Int
   category   SkillCategory @relation(fields: [categoryId], references: [id])
 
   studyLogs        StudyLog[]
   learningPlanItems LearningPlanItem[]
+  quizResults      QuizResult[]
+}
+
+model QuizResult {
+  id            Int    @id @default(autoincrement())
+  score         Int
+  correctCount  Int
+  totalCount    Int
+  assessedGrade Int
+  answers       String @default("[]")
+
+  userId            Int
+  user              User            @relation(fields: [userId], references: [id])
+  trainingContentId Int
+  trainingContent   TrainingContent @relation(fields: [trainingContentId], references: [id])
+
+  createdAt DateTime @default(now())
 }
 
 model LearningPlan {
