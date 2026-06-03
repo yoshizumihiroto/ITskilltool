@@ -1,9 +1,8 @@
 import { PrismaClient, Role, PlanStatus, PlanItemStatus, ImprovementStatus } from '../app/generated/prisma/client'
-import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
+import { PrismaPg } from '@prisma/adapter-pg'
 import bcrypt from 'bcryptjs'
 
-const adapter = new PrismaBetterSqlite3({ url: 'file:./dev.db' })
-const prisma = new PrismaClient({ adapter })
+const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL! }) })
 
 async function main() {
   const team = await prisma.team.create({ data: { name: '開発チームA' } })
