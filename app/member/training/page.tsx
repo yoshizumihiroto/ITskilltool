@@ -162,7 +162,7 @@ export default function TrainingPage() {
         <span className="ml-auto text-sm text-slate-400 self-center">{filtered.length}件</span>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {filtered.map((content) => {
           const done = completedIds.has(content.id)
           return (

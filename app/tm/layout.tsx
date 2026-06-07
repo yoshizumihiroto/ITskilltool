@@ -10,7 +10,7 @@ export default async function TMLayout({ children }: { children: React.ReactNode
   return (
     <div className="flex min-h-screen">
       <Sidebar role="TM" userName={session.name} />
-      <main className="ml-64 flex-1 p-8">{children}</main>
+      <main className="md:ml-64 flex-1 p-4 md:p-8 pt-16 md:pt-8 min-w-0">{children}</main>
     </div>
   )
 }

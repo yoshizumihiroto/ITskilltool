@@ -55,7 +55,7 @@ export default async function MemberDashboard() {
         <p className="text-slate-500 mt-1">こんにちは、{session.name}さん</p>
       </div>
 
-      <div className="grid grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100">
           <p className="text-sm text-slate-500">総学習時間</p>
           <p className="text-3xl font-bold text-slate-800 mt-1">{Math.floor(totalMinutes / 60)}<span className="text-lg font-normal text-slate-500">時間</span></p>
@@ -70,7 +70,7 @@ export default async function MemberDashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-semibold text-slate-700">スキルマップ</h2>

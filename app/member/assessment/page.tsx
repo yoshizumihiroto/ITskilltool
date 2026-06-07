@@ -73,7 +73,7 @@ export default function AssessmentPage() {
         <p className="text-slate-500 mt-1">各スキルカテゴリのスコアを自己評価して記録しましょう</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100">
           <h2 className="font-semibold text-slate-700 mb-4">現在のスキルマップ</h2>
           <SkillRadarChart data={radarData} />
