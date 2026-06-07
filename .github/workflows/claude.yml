@@ -13,6 +13,7 @@ jobs:
       contents: write
       pull-requests: write
       issues: write
+      id-token: write  # ← これを追加
     steps:
       - uses: anthropics/claude-code-action@beta
         with:
