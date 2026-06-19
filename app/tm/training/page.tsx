@@ -2,26 +2,27 @@
 
 import { useState, useEffect } from 'react'
 
-interface Category {
+interface SkillElement {
   id: number
   name: string
   icon: string
+  category: { name: string; icon: string }
 }
 
 interface TrainingContent {
   id: number
   title: string
   description: string
-  minGrade: number
+  minLevel: number
   durationMinutes: number
   tags: string
   isAiGenerated: boolean
   learningText: string
-  category: Category
+  skillElement: SkillElement
 }
 
-const gradeLabels: Record<number, string> = { 1: 'L1', 2: 'L2', 3: 'L3', 4: 'L4', 5: 'L5' }
-const gradeColors: Record<number, string> = {
+const levelLabels: Record<number, string> = { 1: 'L1', 2: 'L2', 3: 'L3', 4: 'L4', 5: 'L5' }
+const levelColors: Record<number, string> = {
   1: 'bg-green-100 text-green-700',
   2: 'bg-blue-100 text-blue-700',
   3: 'bg-yellow-100 text-yellow-700',
@@ -95,10 +96,10 @@ export default function TMTrainingPage() {
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-xs">{content.category.icon}</span>
-                    <span className="text-xs text-slate-500 truncate">{content.category.name}</span>
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${gradeColors[content.minGrade]}`}>
-                      {gradeLabels[content.minGrade]}
+                    <span className="text-xs">{content.skillElement.icon}</span>
+                    <span className="text-xs text-slate-500 truncate">{content.skillElement.name}</span>
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${levelColors[content.minLevel]}`}>
+                      {levelLabels[content.minLevel]}
                     </span>
                   </div>
                   <h3 className="font-semibold text-slate-800 text-sm">{content.title}</h3>

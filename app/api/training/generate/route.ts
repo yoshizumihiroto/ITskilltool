@@ -5,7 +5,7 @@ import { prisma } from '@/lib/db'
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
-const gradeDescriptions: Record<number, string> = {
+const levelDescriptions: Record<number, string> = {
   1: 'L1 基礎理解（知識として理解できる）',
   2: 'L2 実務遂行（指導のもとで実行できる）',
   3: 'L3 自律推進（自分で判断・実行できる）',
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
 
   const content = await prisma.trainingContent.findUnique({
     where: { id: trainingContentId },
-    include: { category: true },
+    include: { skillElement: { include: { category: true } } },
   })
   if (!content) return Response.json({ error: 'Not found' }, { status: 404 })
 
@@ -34,9 +34,10 @@ export async function POST(request: NextRequest) {
 
 【コンテンツ情報】
 タイトル: ${content.title}
-カテゴリ: ${content.category.name}
+大分類: ${content.skillElement.category.name}
+スキル要素: ${content.skillElement.name}
 説明: ${content.description}
-対象レベル: ${gradeDescriptions[content.minGrade]}
+対象レベル: ${levelDescriptions[content.minLevel]}
 タグ: ${content.tags}
 
 【出力形式】
@@ -56,7 +57,7 @@ export async function POST(request: NextRequest) {
 【クイズの条件】
 - 5問作成すること
 - 各問4択
-- 難易度は${gradeDescriptions[content.minGrade]}相当
+- 難易度は${levelDescriptions[content.minLevel]}相当
 - 実務で役立つ実践的な問題にすること
 - answerは正解の選択肢のインデックス（0〜3）`
 

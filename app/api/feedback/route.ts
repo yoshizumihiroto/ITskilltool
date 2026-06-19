@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     include: {
       mentor: { select: { name: true } },
       member: { select: { name: true } },
-      category: true,
+      skillElement: { include: { category: true } },
     },
     orderBy: { createdAt: 'desc' },
   })
@@ -34,18 +34,18 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const { memberId, content, categoryId } = await request.json()
+  const { memberId, content, skillElementId } = await request.json()
 
   const fb = await prisma.feedback.create({
     data: {
       mentorId: session.id,
       memberId,
       content,
-      categoryId: categoryId || null,
+      skillElementId: skillElementId || null,
     },
     include: {
       mentor: { select: { name: true } },
-      category: true,
+      skillElement: { include: { category: true } },
     },
   })
   return Response.json(fb, { status: 201 })

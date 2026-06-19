@@ -17,7 +17,7 @@ export async function GET() {
       name: true,
       assessments: {
         orderBy: { createdAt: 'desc' },
-        include: { category: true },
+        include: { skillElement: { include: { category: true } } },
       },
       studyLogs: {
         select: { durationMinutes: true, loggedAt: true },
@@ -26,20 +26,23 @@ export async function GET() {
     },
   })
 
-  const categories = await prisma.skillCategory.findMany({ orderBy: { id: 'asc' } })
+  const skillElements = await prisma.skillElement.findMany({
+    include: { category: true },
+    orderBy: [{ categoryId: 'asc' }, { order: 'asc' }],
+  })
 
   const memberStats = members.map((m) => {
-    const latestByCategory: Record<number, number> = {}
+    const latestByElement: Record<number, number> = {}
     for (const a of m.assessments) {
-      if (latestByCategory[a.categoryId] === undefined) {
-        latestByCategory[a.categoryId] = a.score
+      if (latestByElement[a.skillElementId] === undefined) {
+        latestByElement[a.skillElementId] = a.score
       }
     }
 
     const totalMinutes = m.studyLogs.reduce((s, l) => s + l.durationMinutes, 0)
     const avgScore =
-      Object.values(latestByCategory).length > 0
-        ? Math.round(Object.values(latestByCategory).reduce((a, b) => a + b, 0) / Object.values(latestByCategory).length)
+      Object.values(latestByElement).length > 0
+        ? Math.round(Object.values(latestByElement).reduce((a, b) => a + b, 0) / Object.values(latestByElement).length)
         : 0
 
     return {
@@ -47,10 +50,10 @@ export async function GET() {
       name: m.name,
       totalMinutes,
       avgScore,
-      scoresByCategory: latestByCategory,
+      scoresByElement: latestByElement,
       lastLogAt: m.studyLogs[0]?.loggedAt || null,
     }
   })
 
-  return Response.json({ members: memberStats, categories })
+  return Response.json({ members: memberStats, skillElements })
 }

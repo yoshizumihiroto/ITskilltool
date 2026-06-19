@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
 
   const logs = await prisma.studyLog.findMany({
     where: { userId: targetUserId },
-    include: { trainingContent: { include: { category: true } } },
+    include: { trainingContent: { include: { skillElement: { include: { category: true } } } } },
     orderBy: { loggedAt: 'desc' },
   })
   return Response.json(logs)
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
       memo: memo || '',
       trainingContentId: trainingContentId || null,
     },
-    include: { trainingContent: { include: { category: true } } },
+    include: { trainingContent: { include: { skillElement: { include: { category: true } } } } },
   })
   return Response.json(log, { status: 201 })
 }

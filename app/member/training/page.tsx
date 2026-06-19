@@ -2,23 +2,31 @@
 
 import { useState, useEffect } from 'react'
 
-interface Category {
+interface SkillElement {
   id: number
   name: string
   icon: string
+  category: { name: string; icon: string }
+}
+
+interface SkillCategory {
+  id: number
+  name: string
+  icon: string
+  elements: SkillElement[]
 }
 
 interface TrainingContent {
   id: number
   title: string
   description: string
-  minGrade: number
+  minLevel: number
   durationMinutes: number
   tags: string
   isAiGenerated: boolean
   learningText: string
   quizJson: string
-  category: Category
+  skillElement: SkillElement
 }
 
 interface QuizQuestion {
@@ -41,12 +49,12 @@ interface QuizResult {
   score: number
   correctCount: number
   totalCount: number
-  assessedGrade: number
+  assessedLevel: number
   results: QuizResultItem[]
 }
 
-const gradeLabels: Record<number, string> = { 1: 'L1 基礎理解', 2: 'L2 実務遂行', 3: 'L3 自律推進', 4: 'L4 リード', 5: 'L5 高度化' }
-const gradeColors: Record<number, string> = {
+const levelLabels: Record<number, string> = { 1: 'L1 基礎理解', 2: 'L2 実務遂行', 3: 'L3 自律推進', 4: 'L4 リード', 5: 'L5 高度化' }
+const levelColors: Record<number, string> = {
   1: 'bg-green-100 text-green-700',
   2: 'bg-blue-100 text-blue-700',
   3: 'bg-yellow-100 text-yellow-700',
@@ -58,9 +66,9 @@ type ModalStep = 'learning' | 'quiz' | 'result'
 
 export default function TrainingPage() {
   const [contents, setContents] = useState<TrainingContent[]>([])
-  const [categories, setCategories] = useState<Category[]>([])
-  const [filterCategory, setFilterCategory] = useState<number | null>(null)
-  const [filterGrade, setFilterGrade] = useState<number | null>(null)
+  const [categories, setCategories] = useState<SkillCategory[]>([])
+  const [filterElement, setFilterElement] = useState<number | null>(null)
+  const [filterLevel, setFilterLevel] = useState<number | null>(null)
   const [completedIds, setCompletedIds] = useState<Set<number>>(new Set())
   const [loading, setLoading] = useState<number | null>(null)
 
@@ -78,8 +86,8 @@ export default function TrainingPage() {
   }, [])
 
   const filtered = contents.filter((c) => {
-    if (filterCategory && c.category.id !== filterCategory) return false
-    if (filterGrade && c.minGrade > filterGrade) return false
+    if (filterElement && c.skillElement.id !== filterElement) return false
+    if (filterLevel && c.minLevel > filterLevel) return false
     return true
   })
 
@@ -138,24 +146,28 @@ export default function TrainingPage() {
 
       <div className="flex gap-3 mb-6">
         <select
-          value={filterCategory ?? ''}
-          onChange={(e) => setFilterCategory(e.target.value ? parseInt(e.target.value) : null)}
+          value={filterElement ?? ''}
+          onChange={(e) => setFilterElement(e.target.value ? parseInt(e.target.value) : null)}
           className="border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
-          <option value="">すべてのカテゴリ</option>
+          <option value="">すべてのスキル要素</option>
           {categories.map((cat) => (
-            <option key={cat.id} value={cat.id}>{cat.icon} {cat.name}</option>
+            <optgroup key={cat.id} label={`${cat.icon} ${cat.name}`}>
+              {cat.elements.map((el) => (
+                <option key={el.id} value={el.id}>{el.icon} {el.name}</option>
+              ))}
+            </optgroup>
           ))}
         </select>
 
         <select
-          value={filterGrade ?? ''}
-          onChange={(e) => setFilterGrade(e.target.value ? parseInt(e.target.value) : null)}
+          value={filterLevel ?? ''}
+          onChange={(e) => setFilterLevel(e.target.value ? parseInt(e.target.value) : null)}
           className="border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <option value="">すべてのレベル</option>
-          {[1, 2, 3, 4, 5].map((g) => (
-            <option key={g} value={g}>L{g}以下</option>
+          {[1, 2, 3, 4, 5].map((l) => (
+            <option key={l} value={l}>L{l}以下</option>
           ))}
         </select>
 
@@ -170,10 +182,10 @@ export default function TrainingPage() {
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-xs">{content.category.icon}</span>
-                    <span className="text-xs text-slate-500">{content.category.name}</span>
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${gradeColors[content.minGrade]}`}>
-                      {gradeLabels[content.minGrade]}
+                    <span className="text-xs">{content.skillElement.icon}</span>
+                    <span className="text-xs text-slate-500">{content.skillElement.name}</span>
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${levelColors[content.minLevel]}`}>
+                      {levelLabels[content.minLevel]}
                     </span>
                     {content.isAiGenerated && (
                       <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">AI</span>
@@ -227,8 +239,8 @@ export default function TrainingPage() {
             <div className="p-6 border-b border-slate-100 flex items-start justify-between">
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-xs">{quizContent.category.icon}</span>
-                  <span className="text-xs text-slate-500">{quizContent.category.name}</span>
+                  <span className="text-xs">{quizContent.skillElement.icon}</span>
+                  <span className="text-xs text-slate-500">{quizContent.skillElement.name}</span>
                 </div>
                 <h2 className="font-bold text-slate-800">{quizContent.title}</h2>
               </div>
@@ -236,7 +248,6 @@ export default function TrainingPage() {
             </div>
 
             <div className="p-6">
-              {/* Step: Learning Text */}
               {modalStep === 'learning' && (
                 <div>
                   <div className="flex items-center gap-2 mb-4">
@@ -255,7 +266,6 @@ export default function TrainingPage() {
                 </div>
               )}
 
-              {/* Step: Quiz */}
               {modalStep === 'quiz' && (
                 <div>
                   <div className="flex items-center gap-2 mb-4">
@@ -305,7 +315,6 @@ export default function TrainingPage() {
                 </div>
               )}
 
-              {/* Step: Result */}
               {modalStep === 'result' && quizResult && (
                 <div>
                   <div className="text-center mb-6">
@@ -322,8 +331,8 @@ export default function TrainingPage() {
                     </p>
                     <div className="mt-2 flex items-center justify-center gap-2">
                       <span className="text-sm text-slate-500">アセスメント結果:</span>
-                      <span className={`text-sm font-bold px-3 py-1 rounded-full ${gradeColors[quizResult.assessedGrade]}`}>
-                        {gradeLabels[quizResult.assessedGrade]}
+                      <span className={`text-sm font-bold px-3 py-1 rounded-full ${levelColors[quizResult.assessedLevel]}`}>
+                        {levelLabels[quizResult.assessedLevel]}
                       </span>
                     </div>
                     <p className="text-xs text-slate-400 mt-1">スキルアセスメントに自動反映されました</p>

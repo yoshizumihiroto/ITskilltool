@@ -49,16 +49,16 @@ model User {
   mentorId Int?
   mentor   User? @relation("MentorMembers", fields: [mentorId], references: [id])
 
-  mentees          User[]            @relation("MentorMembers")
-  assessments      AssessmentResult[]
-  studyLogs        StudyLog[]
-  learningPlans    LearningPlan[]    @relation("PlanOwner")
-  createdPlans     LearningPlan[]    @relation("PlanCreator")
-  feedbackReceived Feedback[]        @relation("FeedbackMember")
-  feedbackGiven    Feedback[]        @relation("FeedbackMentor")
+  mentees              User[]             @relation("MentorMembers")
+  assessments          AssessmentResult[]
+  studyLogs            StudyLog[]
+  learningPlans        LearningPlan[]     @relation("PlanOwner")
+  createdPlans         LearningPlan[]     @relation("PlanCreator")
+  feedbackReceived     Feedback[]         @relation("FeedbackMember")
+  feedbackGiven        Feedback[]         @relation("FeedbackMentor")
   improvementsAsMember ImprovementCycle[] @relation("ImprovementMember")
   improvementsAsMentor ImprovementCycle[] @relation("ImprovementMentor")
-  quizResults      QuizResult[]
+  quizResults          QuizResult[]
 
   createdAt DateTime @default(now())
 }
@@ -68,54 +68,67 @@ model SkillCategory {
   name        String
   description String @default("")
   icon        String @default("📚")
+  order       Int    @default(0)
 
-  grades           SkillGrade[]
+  elements SkillElement[]
+}
+
+model SkillElement {
+  id         Int           @id @default(autoincrement())
+  categoryId Int
+  category   SkillCategory @relation(fields: [categoryId], references: [id])
+  name       String
+  icon       String        @default("📌")
+  definition String        @default("")
+  evalNote   String        @default("")
+  order      Int           @default(0)
+
+  levels           SkillLevel[]
   assessments      AssessmentResult[]
   trainingContents TrainingContent[]
   feedback         Feedback[]
 }
 
-model SkillGrade {
-  id          Int    @id @default(autoincrement())
-  grade       Int
-  description String
-  criteria    String @default("")
-
-  categoryId Int
-  category   SkillCategory @relation(fields: [categoryId], references: [id])
+model SkillLevel {
+  id             Int          @id @default(autoincrement())
+  skillElementId Int
+  skillElement   SkillElement @relation(fields: [skillElementId], references: [id])
+  level          Int
+  name           String
+  descriptor     String
 }
 
 model AssessmentResult {
   id    Int @id @default(autoincrement())
   score Int
-  grade Int
+  level Int
 
-  userId     Int
-  user       User          @relation(fields: [userId], references: [id])
-  categoryId Int
-  category   SkillCategory @relation(fields: [categoryId], references: [id])
+  userId         Int
+  user           User         @relation(fields: [userId], references: [id])
+  skillElementId Int
+  skillElement   SkillElement @relation(fields: [skillElementId], references: [id])
 
   createdAt DateTime @default(now())
 }
 
 model TrainingContent {
-  id               Int    @id @default(autoincrement())
-  title            String
-  description      String @default("")
-  minGrade         Int    @default(1)
-  contentUrl       String @default("")
-  durationMinutes  Int    @default(60)
-  tags             String @default("")
-  learningText     String @default("")
-  quizJson         String @default("[]")
-  isAiGenerated    Boolean @default(false)
+  id              Int     @id @default(autoincrement())
+  title           String
+  description     String  @default("")
+  minLevel        Int     @default(1)
+  contentUrl      String  @default("")
+  durationMinutes Int     @default(60)
+  tags            String  @default("")
+  learningText    String  @default("")
+  quizJson        String  @default("[]")
+  isAiGenerated   Boolean @default(false)
 
-  categoryId Int
-  category   SkillCategory @relation(fields: [categoryId], references: [id])
+  skillElementId Int
+  skillElement   SkillElement @relation(fields: [skillElementId], references: [id])
 
-  studyLogs        StudyLog[]
+  studyLogs         StudyLog[]
   learningPlanItems LearningPlanItem[]
-  quizResults      QuizResult[]
+  quizResults       QuizResult[]
 }
 
 model QuizResult {
@@ -123,7 +136,7 @@ model QuizResult {
   score         Int
   correctCount  Int
   totalCount    Int
-  assessedGrade Int
+  assessedLevel Int
   answers       String @default("[]")
 
   userId            Int
@@ -135,10 +148,10 @@ model QuizResult {
 }
 
 model LearningPlan {
-  id             Int        @id @default(autoincrement())
-  shortTermGoal  String     @default("")
-  midTermGoal    String     @default("")
-  status         PlanStatus @default(ACTIVE)
+  id            Int        @id @default(autoincrement())
+  shortTermGoal String     @default("")
+  midTermGoal   String     @default("")
+  status        PlanStatus @default(ACTIVE)
 
   userId      Int
   user        User @relation("PlanOwner", fields: [userId], references: [id])
@@ -176,22 +189,22 @@ model Feedback {
   id      Int    @id @default(autoincrement())
   content String
 
-  mentorId   Int
-  mentor     User          @relation("FeedbackMentor", fields: [mentorId], references: [id])
-  memberId   Int
-  member     User          @relation("FeedbackMember", fields: [memberId], references: [id])
-  categoryId Int?
-  category   SkillCategory? @relation(fields: [categoryId], references: [id])
+  mentorId       Int
+  mentor         User          @relation("FeedbackMentor", fields: [mentorId], references: [id])
+  memberId       Int
+  member         User          @relation("FeedbackMember", fields: [memberId], references: [id])
+  skillElementId Int?
+  skillElement   SkillElement? @relation(fields: [skillElementId], references: [id])
 
   createdAt DateTime @default(now())
 }
 
 model ImprovementCycle {
-  id     Int                @id @default(autoincrement())
+  id     Int               @id @default(autoincrement())
   issue  String
-  action String             @default("")
-  result String             @default("")
-  status ImprovementStatus  @default(OPEN)
+  action String            @default("")
+  result String            @default("")
+  status ImprovementStatus @default(OPEN)
 
   mentorId Int
   mentor   User @relation("ImprovementMentor", fields: [mentorId], references: [id])

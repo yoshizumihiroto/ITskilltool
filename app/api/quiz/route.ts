@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
 
   const content = await prisma.trainingContent.findUnique({
     where: { id: trainingContentId },
-    include: { category: true },
+    include: { skillElement: true },
   })
   if (!content || !content.isAiGenerated) {
     return Response.json({ error: 'Not found or quiz not generated' }, { status: 404 })
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
   })
 
   const score = Math.round((correctCount / totalCount) * 100)
-  const assessedGrade = Math.max(1, Math.min(5, Math.ceil(score / 20)))
+  const assessedLevel = Math.max(1, Math.min(5, Math.ceil(score / 20)))
 
   await prisma.quizResult.create({
     data: {
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
       score,
       correctCount,
       totalCount,
-      assessedGrade,
+      assessedLevel,
       answers: JSON.stringify(answers),
     },
   })
@@ -65,11 +65,11 @@ export async function POST(request: NextRequest) {
   await prisma.assessmentResult.create({
     data: {
       userId: session.id,
-      categoryId: content.categoryId,
+      skillElementId: content.skillElementId,
       score,
-      grade: assessedGrade,
+      level: assessedLevel,
     },
   })
 
-  return Response.json({ score, correctCount, totalCount, assessedGrade, results })
+  return Response.json({ score, correctCount, totalCount, assessedLevel, results })
 }
