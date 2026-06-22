@@ -1,0 +1,20 @@
+name: Bootstrap improvement issues
+
+# GitHub Mobile / Web の「Run workflow」から手動実行できる
+on:
+  workflow_dispatch:
+
+permissions:
+  issues: write   # issue と label の作成に必要（GITHUB_TOKENで完結）
+
+jobs:
+  create-issues:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create P0 issues
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}   # gh はこの環境変数を認証に使う
+          REPO: ${{ github.repository }}           # 現在のリポジトリを対象にする
+        run: bash scripts/create_issues.sh
