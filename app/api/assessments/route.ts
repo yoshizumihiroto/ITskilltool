@@ -8,7 +8,7 @@ export async function GET() {
 
   const results = await prisma.assessmentResult.findMany({
     where: { userId: session.id },
-    include: { category: true },
+    include: { skillElement: { include: { category: true } } },
     orderBy: { createdAt: 'desc' },
   })
   return Response.json(results)
@@ -18,14 +18,14 @@ export async function POST(request: NextRequest) {
   const session = await getSession()
   if (!session) return Response.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const body: Array<{ categoryId: number; score: number }> = await request.json()
+  const body: Array<{ skillElementId: number; score: number }> = await request.json()
 
   const results = await Promise.all(
-    body.map(({ categoryId, score }) => {
-      const grade = Math.ceil(score / 20)
+    body.map(({ skillElementId, score }) => {
+      const level = score === 0 ? 0 : Math.ceil(score / 20)
       return prisma.assessmentResult.create({
-        data: { userId: session.id, categoryId, score, grade },
-        include: { category: true },
+        data: { userId: session.id, skillElementId, score, level },
+        include: { skillElement: { include: { category: true } } },
       })
     })
   )

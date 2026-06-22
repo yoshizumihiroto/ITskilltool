@@ -10,7 +10,7 @@ export async function GET() {
     where: { userId: session.id, status: 'ACTIVE' },
     include: {
       items: {
-        include: { trainingContent: { include: { category: true } } },
+        include: { trainingContent: { include: { skillElement: { include: { category: true } } } } },
         orderBy: { order: 'asc' },
       },
       createdBy: { select: { name: true } },

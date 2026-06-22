@@ -8,15 +8,15 @@ export default async function MemberDashboard() {
   const session = await getSession()
   if (!session) redirect('/login')
 
-  const [assessments, logs, plan, categories] = await Promise.all([
+  const [assessments, logs, plan, skillElements] = await Promise.all([
     prisma.assessmentResult.findMany({
       where: { userId: session.id },
-      include: { category: true },
+      include: { skillElement: { include: { category: true } } },
       orderBy: { createdAt: 'desc' },
     }),
     prisma.studyLog.findMany({
       where: { userId: session.id },
-      include: { trainingContent: { include: { category: true } } },
+      include: { trainingContent: { include: { skillElement: true } } },
       orderBy: { loggedAt: 'desc' },
       take: 5,
     }),
@@ -26,19 +26,21 @@ export default async function MemberDashboard() {
         items: { include: { trainingContent: true }, orderBy: { order: 'asc' } },
       },
     }),
-    prisma.skillCategory.findMany({ orderBy: { id: 'asc' } }),
+    prisma.skillElement.findMany({
+      orderBy: [{ categoryId: 'asc' }, { order: 'asc' }],
+    }),
   ])
 
-  const latestByCategory: Record<number, { score: number; grade: number }> = {}
+  const latestByElement: Record<number, { score: number; level: number }> = {}
   for (const a of assessments) {
-    if (!latestByCategory[a.categoryId]) {
-      latestByCategory[a.categoryId] = { score: a.score, grade: a.grade }
+    if (!latestByElement[a.skillElementId]) {
+      latestByElement[a.skillElementId] = { score: a.score, level: a.level }
     }
   }
 
-  const radarData = categories.map((cat) => ({
-    category: cat.name,
-    score: latestByCategory[cat.id]?.score ?? 0,
+  const radarData = skillElements.map((el) => ({
+    category: el.name,
+    score: latestByElement[el.id]?.score ?? 0,
     fullMark: 100,
   }))
 
@@ -55,7 +57,7 @@ export default async function MemberDashboard() {
         <p className="text-slate-500 mt-1">こんにちは、{session.name}さん</p>
       </div>
 
-      <div className="grid grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100">
           <p className="text-sm text-slate-500">総学習時間</p>
           <p className="text-3xl font-bold text-slate-800 mt-1">{Math.floor(totalMinutes / 60)}<span className="text-lg font-normal text-slate-500">時間</span></p>
@@ -66,11 +68,11 @@ export default async function MemberDashboard() {
         </div>
         <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100">
           <p className="text-sm text-slate-500">アセスメント受検数</p>
-          <p className="text-3xl font-bold text-slate-800 mt-1">{new Set(assessments.map(a => a.categoryId)).size}<span className="text-lg font-normal text-slate-500">/ {categories.length}</span></p>
+          <p className="text-3xl font-bold text-slate-800 mt-1">{new Set(assessments.map(a => a.skillElementId)).size}<span className="text-lg font-normal text-slate-500">/ {skillElements.length}</span></p>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-semibold text-slate-700">スキルマップ</h2>

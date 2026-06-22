@@ -6,8 +6,13 @@ export async function GET() {
   if (!session) return Response.json({ error: 'Unauthorized' }, { status: 401 })
 
   const categories = await prisma.skillCategory.findMany({
-    include: { grades: { orderBy: { grade: 'asc' } } },
-    orderBy: { id: 'asc' },
+    include: {
+      elements: {
+        include: { levels: { orderBy: { level: 'asc' } } },
+        orderBy: { order: 'asc' },
+      },
+    },
+    orderBy: { order: 'asc' },
   })
   return Response.json(categories)
 }

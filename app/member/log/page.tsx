@@ -7,7 +7,7 @@ interface StudyLog {
   durationMinutes: number
   memo: string
   loggedAt: string
-  trainingContent: { id: number; title: string; category: { name: string; icon: string } } | null
+  trainingContent: { id: number; title: string; skillElement: { name: string; icon: string; category: { name: string } } } | null
 }
 
 export default function LogPage() {
@@ -122,9 +122,9 @@ export default function LogPage() {
                   {log.trainingContent ? (
                     <div>
                       <p className="font-medium text-sm text-slate-800">
-                        {log.trainingContent.category.icon} {log.trainingContent.title}
+                        {log.trainingContent.skillElement.icon} {log.trainingContent.title}
                       </p>
-                      <p className="text-xs text-slate-400 mt-0.5">{log.trainingContent.category.name}</p>
+                      <p className="text-xs text-slate-400 mt-0.5">{log.trainingContent.skillElement.name}</p>
                     </div>
                   ) : (
                     <p className="font-medium text-sm text-slate-800">{log.memo || '自由学習'}</p>

@@ -23,7 +23,7 @@ export async function GET() {
       role: true,
       assessments: {
         orderBy: { createdAt: 'desc' },
-        include: { category: true },
+        include: { skillElement: { include: { category: true } } },
       },
       studyLogs: {
         orderBy: { loggedAt: 'desc' },

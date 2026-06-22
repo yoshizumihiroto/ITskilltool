@@ -4,10 +4,10 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 
 interface AssessmentResult {
-  categoryId: number
+  skillElementId: number
   score: number
-  grade: number
-  category: { name: string; icon: string }
+  level: number
+  skillElement: { name: string; icon: string }
 }
 
 interface StudyLog {
@@ -41,13 +41,13 @@ export default function MentorPage() {
           担当メンバーがいません
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {members.map((member) => {
-            const latestByCategory: Record<number, AssessmentResult> = {}
+            const latestByElement: Record<number, AssessmentResult> = {}
             for (const a of member.assessments) {
-              if (!latestByCategory[a.categoryId]) latestByCategory[a.categoryId] = a
+              if (!latestByElement[a.skillElementId]) latestByElement[a.skillElementId] = a
             }
-            const latestScores = Object.values(latestByCategory)
+            const latestScores = Object.values(latestByElement)
             const avgScore = latestScores.length > 0
               ? Math.round(latestScores.reduce((s, a) => s + a.score, 0) / latestScores.length)
               : null
@@ -78,17 +78,17 @@ export default function MentorPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  {Object.values(latestByCategory).slice(0, 3).map((a) => (
-                    <div key={a.categoryId} className="flex items-center gap-2 text-xs">
-                      <span className="text-slate-400 w-4">{a.category.icon}</span>
-                      <span className="text-slate-600 w-20 truncate">{a.category.name}</span>
+                  {latestScores.slice(0, 3).map((a) => (
+                    <div key={a.skillElementId} className="flex items-center gap-2 text-xs">
+                      <span className="text-slate-400 w-4">{a.skillElement.icon}</span>
+                      <span className="text-slate-600 w-24 truncate">{a.skillElement.name}</span>
                       <div className="flex-1 bg-slate-100 rounded-full h-1.5">
                         <div className="bg-blue-400 h-1.5 rounded-full" style={{ width: `${a.score}%` }} />
                       </div>
-                      <span className="text-slate-500 w-12 text-right">G{a.grade}</span>
+                      <span className="text-slate-500 w-12 text-right">L{a.level}</span>
                     </div>
                   ))}
-                  {Object.values(latestByCategory).length === 0 && (
+                  {latestScores.length === 0 && (
                     <p className="text-xs text-slate-400">アセスメント未受検</p>
                   )}
                 </div>

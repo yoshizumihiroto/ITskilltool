@@ -7,16 +7,16 @@ export async function GET(request: NextRequest) {
   if (!session) return Response.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { searchParams } = new URL(request.url)
-  const categoryId = searchParams.get('categoryId')
-  const minGrade = searchParams.get('minGrade')
+  const skillElementId = searchParams.get('skillElementId')
+  const minLevel = searchParams.get('minLevel')
 
   const contents = await prisma.trainingContent.findMany({
     where: {
-      ...(categoryId ? { categoryId: parseInt(categoryId) } : {}),
-      ...(minGrade ? { minGrade: { lte: parseInt(minGrade) } } : {}),
+      ...(skillElementId ? { skillElementId: parseInt(skillElementId) } : {}),
+      ...(minLevel ? { minLevel: { lte: parseInt(minLevel) } } : {}),
     },
-    include: { category: true },
-    orderBy: [{ categoryId: 'asc' }, { minGrade: 'asc' }],
+    include: { skillElement: { include: { category: true } } },
+    orderBy: [{ skillElementId: 'asc' }, { minLevel: 'asc' }],
   })
   return Response.json(contents)
 }
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
       durationMinutes: durationMinutes || 0,
       memo: memo || '',
     },
-    include: { trainingContent: { include: { category: true } } },
+    include: { trainingContent: { include: { skillElement: { include: { category: true } } } } },
   })
   return Response.json(log, { status: 201 })
 }

@@ -83,7 +83,7 @@ export default function PlanPage() {
         <p className="text-slate-500 mt-1">作成者: {plan.createdBy.name}</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-6 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
         <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100">
           <h2 className="text-sm font-semibold text-slate-500 mb-2">短期目標（3ヶ月）</h2>
           <p className="text-slate-800">{plan.shortTermGoal}</p>

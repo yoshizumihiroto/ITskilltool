@@ -4,10 +4,18 @@ import { useState, useEffect, use } from 'react'
 import Link from 'next/link'
 import SkillRadarChart from '@/components/charts/SkillRadarChart'
 
-interface Category {
+interface SkillElement {
   id: number
   name: string
   icon: string
+  category: { name: string; icon: string }
+}
+
+interface SkillCategory {
+  id: number
+  name: string
+  icon: string
+  elements: SkillElement[]
 }
 
 interface Feedback {
@@ -15,7 +23,7 @@ interface Feedback {
   content: string
   createdAt: string
   mentor: { name: string }
-  category: { name: string; icon: string } | null
+  skillElement: { name: string; icon: string; category: { name: string } } | null
 }
 
 interface Improvement {
@@ -32,14 +40,14 @@ interface StudyLog {
   durationMinutes: number
   memo: string
   loggedAt: string
-  trainingContent: { title: string; category: { name: string; icon: string } } | null
+  trainingContent: { title: string; skillElement: { name: string } } | null
 }
 
 interface Assessment {
-  categoryId: number
+  skillElementId: number
   score: number
-  grade: number
-  category: Category
+  level: number
+  skillElement: SkillElement
 }
 
 const statusConfig = {
@@ -53,13 +61,13 @@ export default function MentorMemberPage({ params }: { params: Promise<{ id: str
   const memberId = parseInt(id)
 
   const [assessments, setAssessments] = useState<Assessment[]>([])
-  const [categories, setCategories] = useState<Category[]>([])
+  const [categories, setCategories] = useState<SkillCategory[]>([])
   const [feedback, setFeedback] = useState<Feedback[]>([])
   const [improvements, setImprovements] = useState<Improvement[]>([])
   const [logs, setLogs] = useState<StudyLog[]>([])
   const [memberName, setMemberName] = useState('')
 
-  const [fbForm, setFbForm] = useState({ content: '', categoryId: '' })
+  const [fbForm, setFbForm] = useState({ content: '', skillElementId: '' })
   const [impForm, setImpForm] = useState({ issue: '', action: '' })
   const [submittingFb, setSubmittingFb] = useState(false)
   const [submittingImp, setSubmittingImp] = useState(false)
@@ -83,14 +91,16 @@ export default function MentorMemberPage({ params }: { params: Promise<{ id: str
     })
   }, [memberId])
 
-  const latestByCategory: Record<number, Assessment> = {}
+  const allElements = categories.flatMap((cat) => cat.elements)
+
+  const latestByElement: Record<number, Assessment> = {}
   for (const a of assessments) {
-    if (!latestByCategory[a.categoryId]) latestByCategory[a.categoryId] = a
+    if (!latestByElement[a.skillElementId]) latestByElement[a.skillElementId] = a
   }
 
-  const radarData = categories.map((cat) => ({
-    category: cat.name,
-    score: latestByCategory[cat.id]?.score ?? 0,
+  const radarData = allElements.map((el) => ({
+    category: el.name,
+    score: latestByElement[el.id]?.score ?? 0,
     fullMark: 100,
   }))
 
@@ -101,11 +111,11 @@ export default function MentorMemberPage({ params }: { params: Promise<{ id: str
       const res = await fetch('/api/feedback', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ memberId, content: fbForm.content, categoryId: fbForm.categoryId ? parseInt(fbForm.categoryId) : null }),
+        body: JSON.stringify({ memberId, content: fbForm.content, skillElementId: fbForm.skillElementId ? parseInt(fbForm.skillElementId) : null }),
       })
       const newFb = await res.json()
       setFeedback((prev) => [newFb, ...prev])
-      setFbForm({ content: '', categoryId: '' })
+      setFbForm({ content: '', skillElementId: '' })
     } finally {
       setSubmittingFb(false)
     }
@@ -152,25 +162,32 @@ export default function MentorMemberPage({ params }: { params: Promise<{ id: str
 
         <div className="space-y-3">
           <h2 className="font-semibold text-slate-700">スキル詳細</h2>
-          {categories.map((cat) => {
-            const latest = latestByCategory[cat.id]
-            return (
-              <div key={cat.id} className="flex items-center gap-3 text-sm">
-                <span className="w-5">{cat.icon}</span>
-                <span className="text-slate-700 w-28">{cat.name}</span>
-                {latest ? (
-                  <>
-                    <div className="flex-1 bg-slate-100 rounded-full h-2">
-                      <div className="bg-blue-500 h-2 rounded-full" style={{ width: `${latest.score}%` }} />
+          {categories.map((cat) => (
+            <div key={cat.id}>
+              <p className="text-xs font-semibold text-slate-500 mb-1">{cat.icon} {cat.name}</p>
+              <div className="space-y-1 pl-3">
+                {cat.elements.map((el) => {
+                  const latest = latestByElement[el.id]
+                  return (
+                    <div key={el.id} className="flex items-center gap-2 text-sm">
+                      <span className="text-xs w-4">{el.icon}</span>
+                      <span className="text-slate-700 text-xs w-32 truncate">{el.name}</span>
+                      {latest ? (
+                        <>
+                          <div className="flex-1 bg-slate-100 rounded-full h-1.5">
+                            <div className="bg-blue-500 h-1.5 rounded-full" style={{ width: `${latest.score}%` }} />
+                          </div>
+                          <span className="text-slate-500 text-xs w-16 text-right">{latest.score}点 / L{latest.level}</span>
+                        </>
+                      ) : (
+                        <span className="text-slate-400 text-xs">未受検</span>
+                      )}
                     </div>
-                    <span className="text-slate-500 text-xs w-20 text-right">{latest.score}点 / G{latest.grade}</span>
-                  </>
-                ) : (
-                  <span className="text-slate-400 text-xs">未受検</span>
-                )}
+                  )
+                })}
               </div>
-            )
-          })}
+            </div>
+          ))}
 
           <div className="pt-4 border-t border-slate-100">
             <h3 className="text-sm font-semibold text-slate-600 mb-2">最近の学習</h3>
@@ -190,13 +207,17 @@ export default function MentorMemberPage({ params }: { params: Promise<{ id: str
             <h2 className="font-semibold text-slate-700 mb-4">フィードバックを送る</h2>
             <form onSubmit={submitFeedback} className="space-y-3">
               <select
-                value={fbForm.categoryId}
-                onChange={(e) => setFbForm((p) => ({ ...p, categoryId: e.target.value }))}
+                value={fbForm.skillElementId}
+                onChange={(e) => setFbForm((p) => ({ ...p, skillElementId: e.target.value }))}
                 className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="">カテゴリなし</option>
+                <option value="">スキル要素なし</option>
                 {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>{cat.icon} {cat.name}</option>
+                  <optgroup key={cat.id} label={`${cat.icon} ${cat.name}`}>
+                    {cat.elements.map((el) => (
+                      <option key={el.id} value={el.id}>{el.icon} {el.name}</option>
+                    ))}
+                  </optgroup>
                 ))}
               </select>
               <textarea
@@ -225,7 +246,11 @@ export default function MentorMemberPage({ params }: { params: Promise<{ id: str
               ) : feedback.map((fb) => (
                 <div key={fb.id} className="border-b border-slate-50 pb-3 last:border-0">
                   <div className="flex items-center gap-2 mb-1">
-                    {fb.category && <span className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">{fb.category.icon} {fb.category.name}</span>}
+                    {fb.skillElement && (
+                      <span className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">
+                        {fb.skillElement.icon} {fb.skillElement.name}
+                      </span>
+                    )}
                     <span className="text-xs text-slate-400">{new Date(fb.createdAt).toLocaleDateString('ja-JP')}</span>
                   </div>
                   <p className="text-sm text-slate-700">{fb.content}</p>
